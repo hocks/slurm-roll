@@ -1,0 +1,49 @@
+<?xml version="1.0" standalone="no"?>
+
+<graph>
+
+	<description>
+
+	The slurm Roll
+
+	</description>
+
+	<copyright>
+	Copyright (c) 2000 - 2012 The Regents of the University of California.
+	All rights reserved. Rocks(r) v5.5/v6.0 www.rocksclusters.org
+	
+	</copyright>
+
+	<!-- add edges here -->
+
+	<edge from="base">
+	  <to>slurm-base</to>
+	</edge>
+
+	<edge from="server">
+	  <to>slurm-server</to>
+	</edge>
+
+	<edge from-"client">
+	  <to>slurm-client</to>
+	</edge>
+
+	<!-- enforce post section ordering -->
+
+	<!--
+	  slurm-server post sections execute before slurm-base
+	  post sections
+	-->	
+	<order head="slurm-server">
+	  <tail>slurm-base</tail>
+	</order>
+
+	<!--
+	  slurm-client post sections execute after slurm-base
+	  post sections
+	-->
+	<order head="slurm-base">
+	  <tail>slurm-client</tail>
+	</order>
+
+</graph>
