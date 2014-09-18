@@ -1,6 +1,6 @@
 ROLLNAME	= slurm
-VERSION         = 6.2
-RELEASE         = beta
+VERSION        :=$(shell bash version.sh -v)
+RELEASE        :=$(shell bash version.sh -h).beta
 COPYRIGHT       = Copyright (c) 2014, The Regents of the University of California.
 COLOR		= blue
 
