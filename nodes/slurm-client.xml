@@ -14,5 +14,16 @@
 	</copyright>
 
 
+<post>
+
+<file name="/etc/sysconfig/slurm">
+# Ensure the limits we want for large clusters apply to the slurm daemons
+ulimit -l unlimited
+ulimit -n 8192
+</file>
+
+chkconfig slurm on
+
+</post>
 
 </kickstart>

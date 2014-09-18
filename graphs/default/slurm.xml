@@ -14,35 +14,32 @@
 	
 	</copyright>
 
-	<!-- add edges here -->
-
-	<edge from="base">
-	  <to>slurm-base</to>
-	</edge>
 
 	<edge from="server">
+	  <to>slurm-common</to>
 	  <to>slurm-server</to>
 	</edge>
 
 	<edge from-"client">
+	  <to>slurm-common</to>
 	  <to>slurm-client</to>
 	</edge>
 
 	<!-- enforce post section ordering -->
 
 	<!--
-	  slurm-server post sections execute before slurm-base
+	  slurm-server post sections execute after slurm-common
 	  post sections
 	-->	
-	<order head="slurm-server">
-	  <tail>slurm-base</tail>
+	<order head="slurm-common">
+	  <tail>slurm-server</tail>
 	</order>
 
 	<!--
-	  slurm-client post sections execute after slurm-base
+	  slurm-client post sections execute after slurm-common
 	  post sections
 	-->
-	<order head="slurm-base">
+	<order head="slurm-common">
 	  <tail>slurm-client</tail>
 	</order>
 

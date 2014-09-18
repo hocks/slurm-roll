@@ -4,7 +4,7 @@
 
 
 	<description>
-	slurm server
+	slurm server running on Service machine
 	</description>
 
 	<copyright>
@@ -13,6 +13,222 @@
 	
 	</copyright>
 
+<package>slurm-slurmdbd</package>
+<package>slurm-slurmdb-direct</package>
+<package>slurm-sql</package>
+<package>slurm-sjstat</package>
+<package>slurm-sjobexit</package>
+<package>rocks-command-slurm</package>
+<package>slurm-rolldoc</package>
+<package>slurm-devel</package>
+<package>slurm-perlapi</package>
+
+<package>mysql</package>
+<package>mysql-devel</package>
+<package>mysql-server</package>
+<package>mysql-libs</package>
+
+<post>
+
+/opt/rocks/bin/rocks set host attr  &hostname; attr="slurm_pam_enable" value="false"
+
+export PASS=$(echo "slurm$RANDOM$PPID$RANDOM")
+export ROOTPASS=$(echo "root$RANDOM$PPID$RANDOM" > /root/.rocks.my.cnf)
+
+<file name="/etc/slurm/slurm.conf" perms="600">
+MpiDefault=none
+#MpiParams=ports=#-# 
+ReturnToService=1
+SlurmctldPidFile=/var/run/slurmctld.pid
+SlurmctldPort=6817 
+SlurmctldTimeout=120 
+SlurmdPidFile=/var/run/slurmd.pid
+SlurmdPort=6818 
+SlurmdTimeout=300 
+SlurmdSpoolDir=/var/spool/slurmd
+SlurmUser=slurm
+PluginDir=/usr/lib64/slurm
+StateSaveLocation=/var/spool/slurm.state
+SwitchType=switch/none
+# 
+# 
+# TIMERS 
+MinJobAge=300
+KillWait=30
+WaitTime=30
+# 
+# 
+# SCHEDULING 
+EnforcePartLimits=YES
+FastSchedule=1
+SchedulerType=sched/backfill
+SchedulerPort=7321 
+SelectType=select/cons_res
+VSizeFactor=90
+SelectTypeParameters=CR_Cpu_Memory
+PreemptMode=SUSPEND,GANG
+PreemptType=preempt/partition_prio
+PriorityType=priority/multifactor
+PriorityDecayHalfLife=14-0  
+PriorityWeightFairshare=10000
+PriorityWeightAge=1000 
+PriorityWeightPartition=10000
+PriorityWeightJobSize=1000
+PriorityMaxAge=1-0
+PriorityWeightQOS=10000
+# 
+# Jobs
+#MaxJobCount=
+CacheGroups=0
+#Prolog=
+Epilog=/etc/slurm/slurm.epilog.clean
+#SrunProlog=
+#SrunEpilog=
+#TaskProlog=
+PriorityWeightPartition=10000
+PriorityWeightJobSize=1000
+PriorityMaxAge=1-0
+PriorityWeightQOS=10000
+# 
+# Jobs
+#MaxJobCount=
+CacheGroups=0
+#Prolog=
+Epilog=/etc/slurm/slurm.epilog.clean
+#SrunProlog=
+#SrunEpilog=
+#TaskProlog=
+#TaskEpilog=
+#TaskPlugin=task/affinity
+TaskPlugin=task/cgroup
+TmpFs=/state/partition1
+#JobSubmitPlugins=default
+JobCheckpointDir=/var/spool/slurm.checkpoint
+JobCompType=jobcomp/mysql
+# 
+# ACCOUNTING 
+AccountingStorageType=accounting_storage/slurmdbd
+ProctrackType=proctrack/linuxproc
+#JobAcctGatherFrequency=30 
+JobAcctGatherType=jobacct_gather/linux
+#
+# LOGGING 
+#SlurmctldDebug=3 
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdDebug=3 
+DebugFlags=NO_CONF_HASH,Priority,SelectType,Gres,FrontEnd,CPU_Bind,Backfill,Triggers
+SlurmdLogFile=/var/log/slurm/slurmd.log
+# 
+
+# COMPUTE NODES 
+GresTypes=gpu
+TopologyPlugin=topology/none
+#TreeWidth=50
 
 
+NodeName=DEFAULT State=UNKNOWN 
+PartitionName=DEFAULT AllocNodes=ALL State=UP
+#######################################
+include /etc/slurm/servernode.conf
+include /etc/slurm/nodenames.conf
+include /etc/slurm/partitions.conf
+</file>
+
+<file name="/etc/slurm/nodenames.conf" perms="644">
+NodeName=DEFAULT State=UNKNOWN cpus=16 RealMemory=24151 Sockets=2 CoresPerSocket=8 ThreadsPerCore=1 
+</file>
+
+<file name="/etc/slurm/partitions.conf" perms="644">
+PartitionName=CLUSTER DEFAULT=YES State=UP
+</file>
+
+<file name="/etc/slurm/servernode.conf" perms="644">
+ClusterName=.&SLURM_ClusterName;
+ControlMachine=&SLURM_Servername;
+ControlAddr=&SLURM_ServerAddress;     <<<<<<<<<<<<<????????????????
+DefaultStorageType=slurmdbd
+DefaultStorageHost=&SLURM_Servername;
+</file>
+
+<file name="/etc/slurm/cgroup.conf" perms="644">
+CgroupAutomount=yes
+CgroupReleaseAgentDir="/etc/slurm/cgroup"
+ConstrainCores=no
+ConstrainRAMSpace=no
+</file>
+
+<file name="/etc/slurm/slurmdbd.conf" perms="750">
+AuthType=auth/munge
+AuthInfo=/var/run/munge/munge.socket.2
+DbdAddr=&SLURM_Servername;
+DbdHost=&SLURM_Servername;
+DbdPort=6819
+SlurmUser=root
+MessageTimeout=30
+DebugLevel=1
+LogFile=/var/log/slurm/slurmdbd.log
+PidFile=/var/run/slurmdbd.pid
+PluginDir=/usr/lib64/slurm
+StorageType=accounting_storage/mysql
+StorageHost=127.0.0.1
+StoragePort=3306
+StorageUser=slurm
+StorageLoc=slurm_acct_db
+</file>
+
+
+echo "StoragePass=$PASS" >> /etc/slurm/slurmdbd.conf
+
+
+<file name="/etc/slurm/topology.conf" perms="750">
+# Empty File
+</file>
+
+create-munge-key -f
+chown munge.munge /etc/munge
+chown munge.munge /etc/munge/munge.key
+chmod 700 /etc/munge
+chmod 400 /etc/munge/munge.key
+
+chkconfig slurmdbd on
+
+chkconfig mysqld on
+chkconfig munge on
+
+service mysqld start
+service munge start
+
+mysqld_safe --skip-grant-tables
+mysql --user=root mysql << EOF
+update user set Password=PASSWORD('$PASS') where user='root';
+EOF
+
+mysql --defaults-extra-file=/root/.rocks.my.cnf << EOF
+create database slurm_acct_db;
+EOF
+
+mysql --defaults-extra-file=/root/.rocks.my.cnf << EOF
+grant all on slurm_acct_db.* to slurm@localhost identified by '$PASS';
+grant all on slurm_acct_db.* to slurm@'%' identified by '$PASS';
+EOF
+
+/usr/sbin/slurmdbd -D
+
+
+service slurmdbd start
+sleep 60
+sacctmgr -i create cluster $CLUSTER
+RET=$?
+if [ $RET -ne 0 ]; then
+        sleep 60
+        sacctmgr -i create cluster $CLUSTER
+        RET=$?
+fi
+sleep 20
+service slurm start
+
+
+</post>
 </kickstart>
+
+
