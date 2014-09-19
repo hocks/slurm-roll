@@ -1,0 +1,32 @@
+<?xml version="1.0" standalone="no"?>
+
+<kickstart>
+
+
+	<description>
+	slurm server running on Service machine
+	</description>
+
+	<copyright>
+	Copyright (c) 2000 - 2012 The Regents of the University of California.
+	All rights reserved. Rocks(r) v5.5/v6.0 www.rocksclusters.org
+	
+	</copyright>
+
+<package>munge</package>
+<package>munge-libs</package>
+<package>hwloc</package>
+<package>numactl</package>
+<package>slurm</package>
+
+<post>
+
+chkconfig slurm on
+chkconfig munge on
+service munge start
+service slurm start
+
+</post>
+</kickstart>
+
+

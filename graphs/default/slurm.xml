@@ -16,29 +16,29 @@
 
 
 	<edge from="server">
-	  <to>slurm-common</to>
 	  <to>slurm-server</to>
 	</edge>
 
-	<edge from-"client">
+	<edge from="service">
+	  <to>slurm-common</to>
+	  <to>slurm-service</to>
+	</edge>
+
+	<edge from="client">
 	  <to>slurm-common</to>
 	  <to>slurm-client</to>
 	</edge>
 
 	<!-- enforce post section ordering -->
 
-	<!--
-	  slurm-server post sections execute after slurm-common
-	  post sections
-	-->	
-	<order head="slurm-common">
+	<order head="server">
 	  <tail>slurm-server</tail>
 	</order>
 
-	<!--
-	  slurm-client post sections execute after slurm-common
-	  post sections
-	-->
+	<order head="slurm-common">
+	  <tail>slurm-service</tail>
+	</order>
+
 	<order head="slurm-common">
 	  <tail>slurm-client</tail>
 	</order>
