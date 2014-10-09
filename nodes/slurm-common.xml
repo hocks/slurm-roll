@@ -13,18 +13,70 @@
 	
 	</copyright>
 
+<package>ncurses-term</package>
 <package>munge</package>
 <package>munge-libs</package>
+<package>munge-devel</package>
 <package>hwloc</package>
 <package>numactl</package>
 <package>slurm</package>
+<package>slurm-munge</package>
+<package>slurm-sql</package>
+<package>slurm-plugins</package>
+<package>slurm-perlapi</package>
+<package>slurm-torque</package>
 
 <post>
 
-chkconfig slurm on
+/bin/mkdir /var/spool/slurmd
+/bin/mkdir /var/log/slurm
+/bin/mkdir /var/spool/slurm.checkpoint
+chmod 1777 /var/spool/slurm.checkpoint
+
+<file name="/etc/logrotate.d/slurm">
+/var/log/slurm/slurmctld.log {
+        size=100M
+        copytruncate
+        missingok
+        daily
+}
+
+/var/log/slurm/slurmdbd.log {
+        size=100M
+        copytruncate
+        missingok
+        daily
+}
+
+/var/log/slurm/slurmd.log {
+        size=100M
+        copytruncate
+        missingok
+        daily
+}
+
+
+</file>
+
+<file name="/etc/rc.d/rocksconfig.d/post-96-munge" perms="0700">
+#!/bin/sh
+
+while [! -f /etc/munge/munge.key ] ; do
+  sleep 2
+done
+
+/bin/chown -R munge.munge /etc/munge
+/bin/chown -R munge.munge /var/log/munge
+/bin/chown -R munge.munge /var/run/munge
+
+
+/bin/rm /etc/rc.d/rocksconfig.d/post-96-munge
+</file> 
+
+
 chkconfig munge on
+chkconfig slurm on
 service munge start
-service slurm start
 
 </post>
 </kickstart>

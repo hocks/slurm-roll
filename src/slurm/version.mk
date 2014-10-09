@@ -1,5 +1,3 @@
-PKGROOT         = /opt/slurm
 NAME            = slurm
-VERSION         = 14.03.7
-RELEASE 	= 1
+VERSION         = 14.03.8
 TARBALL_POSTFIX	= tar.bz2

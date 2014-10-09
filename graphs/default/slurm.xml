@@ -16,15 +16,15 @@
 
 
 	<edge from="server">
+	  <to>rocks-server</to>
+	</edge>
+
+	<edge from="base" cond="SLURM_Server">
+	  <to>slurm-common</to>
 	  <to>slurm-server</to>
 	</edge>
 
-	<edge from="service">
-	  <to>slurm-common</to>
-	  <to>slurm-service</to>
-	</edge>
-
-	<edge from="client">
+	<edge from="compute">
 	  <to>slurm-common</to>
 	  <to>slurm-client</to>
 	</edge>
@@ -32,11 +32,11 @@
 	<!-- enforce post section ordering -->
 
 	<order head="server">
-	  <tail>slurm-server</tail>
+	  <tail>rocks-server</tail>
 	</order>
 
 	<order head="slurm-common">
-	  <tail>slurm-service</tail>
+	  <tail>slurm-server</tail>
 	</order>
 
 	<order head="slurm-common">

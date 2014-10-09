@@ -16,13 +16,31 @@
 
 <post>
 
+<file name="/opt/rocks/var/plugins/411/slurm_conf.py">
+
+import os
+import sys
+import stat
+import rocks.service411
+
+class Plugin(rocks.service411.Plugin):
+
+        def get_filename(self):
+                   return '/etc/slurm/slurm.conf'
+        def post(self):
+                os.system("scontrol reconfigure")
+
+
+</file>
+
+
 <file name="/etc/sysconfig/slurm">
 # Ensure the limits we want for large clusters apply to the slurm daemons
 ulimit -l unlimited
 ulimit -n 8192
 </file>
 
-chkconfig slurm on
+service slurm start
 
 </post>
 
