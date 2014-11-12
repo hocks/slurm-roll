@@ -1,0 +1,36 @@
+#!/bin/bash
+# Simple compatibility wrapper to sbank
+# Sat Feb  8 14:44:54 GMT 2014
+#set -x
+
+cmdname=`basename $0`
+args="$*"
+case $cmdname in
+        mybalance)
+                exec sbank balance statement -u
+        ;;
+        gbalance)
+	        if [ `expr "$args" : '.*--full.*$'` -gt 0 ]; then
+		    project=`expr "$args" : '.*-p *\([^ ][^ ]*\) *.*$'`
+		    [ "$project" ] || { echo "ERROR: no project found." ; exit 1 ; }
+                    project=`echo $project | tr [:upper:] [:lower:]`
+		    sbank balance statement -a $project
+		    sacctmgr list associations account=$project format=Account'%-30' withsubaccounts | egrep -ve "Account|---" | sort | uniq \
+			| while read p junk; do [ "$p" = "$project" ] && continue; sbank balance statement -a $p | grep -i -- $p ; done
+		else
+                    newargs=`echo $args | sed -e 's/-h *//g' -e 's/-p \ *\([A-Za-z0-9\-][A-Za-z0-9\-]*\)/-a \1/g' -e 's/-u \ *\([A-Za-z0-9\-][A-Za-z0-9\-]*\)/-U \1 -u/g'`
+                    exec sbank balance statement $newargs
+		fi
+        ;;
+        gdeposit)
+                newargs=`echo $args | sed -e 's/-[ai] \ *[0-9][0-9]*//g' -e 's/-h *//g' -e 's/-p \ *\([A-Za-z0-9\-][A-Za-z0-9\-]*\)/-a \1/g' -e 's/-z \ *\([0-9][0-9]*\)/-t \1/g'`
+                exec sbank deposit -c hpcs $newargs
+        ;;
+	gstatement)
+		newargs=`echo $args | sed -e 's/-h *//g' -e 's/-u \ *\([A-Za-z0-9\-\,][A-Za-z0-9\-\,]*\)/--user=\1/g' -e 's/-p \ *\([A-Za-z0-9\-\,][A-Za-z0-9\-\,]*\)/--accounts=\1/g' -e 's/-s \ *\([^ ][^ ]*\)/--starttime=\1/g' -e 's/-e \ *\([^ ][^ ]*\)/--endtime=\1/g'`
+		exec sacct --allusers --allocations --format=jobid,user,account,jobname,partition,end,ncpus,cputimeraw,exitcode,state $newargs
+	;;	
+        *)
+        :
+        ;;
+esac

@@ -1,0 +1,179 @@
+<?xml version="1.0" standalone="no"?>
+
+<kickstart>
+
+
+	<description>
+	slurm server running on Service machine
+	</description>
+
+	<copyright>
+	Copyright (c) 2000 - 2012 The Regents of the University of California.
+	All rights reserved. Rocks(r) v5.5/v6.0 www.rocksclusters.org
+	
+	</copyright>
+
+<changelog>
+  set up accounting storage mysql 2014/10/14 eh 
+  create-numge-key script added  2014/10/13 eh
+  rocks sync slurm command added 2014/10/10 eh
+</changelog>
+
+<package>slurm-sync</package>
+<package>create-munge-key</package>
+
+<post>
+
+/opt/rocks/bin/rocks set host attr attr="slurm_pam_enable" value="false"
+
+<file name="/etc/slurm/slurm.conf" perms="644">
+MpiDefault=none
+ReturnToService=1
+SlurmctldPidFile=/var/run/slurmctld.pid
+SlurmctldPort=6817 
+SlurmctldTimeout=120 
+SlurmdPidFile=/var/run/slurmd.pid
+SlurmdPort=6818 
+SlurmdTimeout=300 
+SlurmdSpoolDir=/var/spool/slurmd
+SlurmUser=slurm
+PluginDir=/usr/lib64/slurm
+StateSaveLocation=/var/spool/slurm.state
+SwitchType=switch/none
+# 
+# 
+# TIMERS 
+MinJobAge=300
+KillWait=30
+WaitTime=30
+# 
+# 
+# SCHEDULING 
+EnforcePartLimits=YES
+FastSchedule=1
+SchedulerType=sched/backfill
+SchedulerPort=7321 
+SelectType=select/cons_res
+VSizeFactor=90
+SelectTypeParameters=CR_Cpu_Memory
+PreemptMode=SUSPEND,GANG
+PreemptType=preempt/partition_prio
+PriorityType=priority/multifactor
+PriorityDecayHalfLife=0
+PriorityUsageResetPeriod=NONE
+PriorityWeightAge=1000 
+# 
+Jobs
+#MaxJobCount=
+MaxArraySize=1000
+CacheGroups=0
+#Prolog=
+Epilog=/etc/slurm/slurm.epilog.clean
+#SrunProlog=
+#SrunEpilog=
+#TaskProlog=
+PriorityWeightPartition=10000
+PriorityWeightJobSize=1000
+PriorityMaxAge=1-0
+PriorityWeightQOS=10000
+TaskPlugin=task/cgroup
+TmpFs=/state/partition1
+JobCheckpointDir=/var/spool/slurm.checkpoint
+JobCompType=jobcomp/filetxt
+JobCompLoc=/var/log/slurm/job_completions
+ProctrackType=proctrack/linuxproc
+# 
+# ACCOUNTING 
+AccountingStorageEnforce=safe
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageHost=$SLURM_Servername;
+AccountingStoragePort=6819                      
+AccountingStorageLoc=/var/log/slurm/accounting 
+#JobAcctGatherFrequency=30 
+JobAcctGatherType=jobacct_gather/linux
+#
+# LOGGING 
+#SlurmctldDebug=3 
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdDebug=3 
+DebugFlags=NO_CONF_HASH,Priority,SelectType,Gres,FrontEnd,CPU_Bind,Backfill,Triggers
+SlurmdLogFile=/var/log/slurm/slurmd.log
+# 
+
+# COMPUTE NODES 
+GresTypes=gpu
+TopologyPlugin=topology/tree
+#TreeWidth=50
+
+
+NodeName=DEFAULT State=UNKNOWN 
+PartitionName=DEFAULT AllocNodes=ALL State=UP
+#######################################
+include /etc/slurm/servernode.conf
+include /etc/slurm/nodenames.conf
+include /etc/slurm/partitions.conf
+</file>
+
+<file name="/etc/slurm/nodenames.conf" perms="0644">
+NodeName=DEFAULT State=UNKNOWN 
+</file>
+
+<file name="/etc/slurm/partitions.conf" perms="0644">
+PartitionName=DEFAULT DEFAULT=YES State=UP
+</file>
+
+ServiceNode=$(rocks list host |grep "Service Node" | awk -F":" 'NR==1{ print $1 }')
+if [[ $ServiceNode == "" ]] ; then
+ ServiceNode=&Kickstart_PrivateHostname;
+fi
+ServiceAddress=$(host $ServiceNode.local | awk '{ print $4 }')
+
+rocks add attr attr="SLURM_ClusterName" value="CLUSTER"
+rocks add attr attr="SLURM_Servername" value=$ServiceNode
+
+<file name="/etc/slurm/servernode.conf" perms="0644">
+ClusterName=&SLURM_ClusterName;
+ControlMachine=&SLURM_Servername;
+DefaultStorageType=slurmdbd
+DefaultStorageHost=&SLURM_Servername;
+</file>
+
+echo "ControlAddr=$ServiceAddress" >>/etc/slurm/servernode.conf
+
+
+<file name="/etc/slurm/cgroup.conf" perms="0644">
+CgroupAutomount=yes
+CgroupReleaseAgentDir="/etc/slurm/cgroup"
+ConstrainCores=no
+ConstrainRAMSpace=no
+</file>
+
+
+<file name="/etc/slurm/topology.conf" perms="0644">
+# Empty File
+</file>
+
+/usr/sbin/create-munge-key -f
+chown munge.munge /etc/munge
+chmod 700 /etc/munge
+
+if grep "/etc/slurm" /var/411/Files.mk
+then
+   true
+else
+<file name="/var/411/Files.mk" mode="apend">
+FILES += /etc/slurm/servernode.conf
+FILES += /etc/slurm/nodenames.conf
+FILES += /etc/slurm/partitions.conf
+FILES += /etc/slurm/topology.conf
+FILES += /etc/slurm/cgroup.conf
+FILES += /etc/slurm/slurm.conf
+FILES_NOCOMMENT += /etc/munge/munge.key
+</file>
+fi
+
+
+</post>
+</kickstart>
+
+

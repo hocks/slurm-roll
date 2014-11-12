@@ -1,0 +1,50 @@
+# Simple compatibility wrapper to sbank
+# Sat Feb  8 14:44:54 GMT 2014
+# (C) 2014 Stuart Rankin 
+# You may freely distribute this file under the terms of the GNU General
+# Public License, version 2 or later.
+
+Summary: gwrapper
+Name: @NAME@
+Version: @VERSION@
+Release: @RELEASE@
+License: GPL
+Vendor: University of Cambridge
+Group: High Performance Computing Service
+Source: %{name}-%{version}.tar.gz
+Buildroot: @VAR@/tmp/%{name}-buildroot
+BuildArchitectures: noarch
+Prefix: /usr/bin
+
+%description
+gwrapper provides slurm accounting interface via gold commands
+
+##
+## PREP
+##
+%prep
+%setup
+
+##
+## BUILD
+##
+%build
+
+##
+## INSTALL
+##
+%install
+make ROOT=$RPM_BUILD_ROOT install
+
+##
+## FILES
+##
+%files
+/
+
+##
+## CLEAN
+##
+%clean
+/bin/rm -rf $RPM_BUILD_ROOT
+
