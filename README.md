@@ -54,6 +54,8 @@ Rocks Server: The roll will add 2 global attributes in the Rocks database:
 	has to be forces to flush all changes and the 411 client must pull those changes. 
 	The slurm daemon will be reconfigured by 411 plugin after the configuration changes are propagated.
 	              
-        The slurm code is installed in the default location
+        The slurm code is installed in the default location.
+	munge, slurm-bank, gwrapper, lua, hwloc will be installed in the roll.
+
      
 Eva Hocks
