@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 
-<kickstart>
+<kickstart roll="slurm">
 
 
 	<description>
@@ -12,6 +12,11 @@
 	All rights reserved. Rocks(r) v5.5/v6.0 www.rocksclusters.org
 	
 	</copyright>
+
+<changelog>
+  add mysql DB on slurm-server machine if not on rocks-server
+  use rocks attribute  SLURM_ServerAdress in configuration file 2014/10/10 eh
+</changelog>
 
 <package>readline-devel</package> 
 <package>openssl-devel</package>
@@ -28,29 +33,99 @@
 <package>slurm-slurmdbd</package>
 <package>slurm-slurmdb-direct</package>
 
-
 <post>
 
-<file> name="/etc/slurm/slurmdbd.conf" perms="0640">
+export PASS=$(echo "slurm$RANDOM$PPID$RANDOM")
+
+<file name="/etc/slurm/slurmdbd.conf" perms="0640">
 AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2
-DbdAddr=10.1.1.1
+DbdAddr=&SLURM_ServerAddress;
 DbdHost=&SLURM_Servername;
 DbdPort=6819
 SlurmUser=slurm
 MessageTimeout=30
 DebugLevel=3
 LogFile=/var/log/slurm/slurmdbd.log
-PidFile=/var/run/slurmdbd.pid
+PidFile=/var/run/slurm/slurmdbd.pid
 PluginDir=/usr/lib64/slurm
 StorageType=accounting_storage/mysql
 StorageHost=127.0.0.1
 StoragePort=3306
-StoragePass=slurm253111160222987
 StorageUser=slurm
 StorageLoc=slurm_acct_db
 </file>
 
+
+echo "StoragePass=$PASS" &gt;&gt; /etc/slurm/slurmdbd.conf
+
+chkconfig slurmdbd on
+
+
+<file name="/etc/rc.d/rocksconfig.d/post-96-mysql" perms="0700">
+#!/bin/sh
+
+if [[ $(hostname -s) != &Kickstart_PrivateHostname; ]] ; then
+ echo "innodb_buffer_pool_size=64M" &gt;&gt; /etc/my.conf
+
+ service mysqld start
+ chkconfig mysqld on
+
+ PASS=$(grep StoragePass /etc/slurm/slurmdbd.conf | awk -F"=" '{ print $2 }')
+ 
+ mysql -u root -e "create database slurm_acct_db;"
+ mysql -u root -e "GRANT ALL ON slurm_acct_db.* TO 'slurm'@'localhost' identified by '$PASS' with grant option;"
+ mysql -u root -e "GRANT ALL ON slurm_acct_db.* TO slurm@'%' identified by '$PASS';"
+ mysql -u root -e "GRANT ALL ON slurm_acct_db.* TO 'slurm'@'$(hostname -s).local' identified by '$PASS' with grant option;"
+
+ mkdir /var/run/slurm/
+ chown slurm /var/run/slurm
+ chown slurm /var/log/slurm  
+ mkdir /var/spool/slurm.state
+ chown slurm /var/spool/slurm.state
+
+ service slurmdbd start
+ sleep 60
+ sacctmgr -i add cluster &SLURM_ClusterName;
+ sacctmgr -i add account node,test Cluster=&SLURM_ClusterName; Description="none" Organization="none"  
+ sleep 20
+ service slurm start
+
+else
+ export ROOTPASS=$(cat /root/.rocks.my.cnf |awk ' /password/ { print $3 }')
+
+mysql mysql &lt;&lt; EOF
+update user set password=password('$ROOTPASS') where user='root';
+flush privileges;
+exit;
+EOF
+
+mysql --defaults-extra-file=/root/.rocks.my.cnf &lt;&lt; EOF
+create database slurm_acct_db;
+exit;
+EOF
+
+ PASS=$(grep StoragePass /etc/slurm/slurmdbd.conf | awk -F"=" '{ print $2 }')
+
+mysql --defaults-extra-file=/root/.rocks.my.cnf &lt;&lt; EOF
+GRANT ALL ON slurm_acct_db.* TO 'slurm'@'localhost' identified by '$PASS' with grant option;
+GRANT ALL ON slurm_acct_db.* To slurm@'%' identified by '$PASS';
+GRANT ALL ON slurm_acct_db.* TO 'slurm'@'$(hostname -s).local' identified by '$PASS' with grant option;
+exit;
+EOF
+
+ service slurmdbd start
+ sleep 60
+ sacctmgr -i add cluster &SLURM_ClusterName;
+ sacctmgr -i add account test Cluster=&SLURM_ClusterName; Description="none" Organization="none"  
+ sleep 20
+ service slurm start
+
+fi
+
+ /bin/rm /etc/rc.d/rocksconfig.d/post-96-mysql
+
+</file>
 
 </post>
 </kickstart>

@@ -14,24 +14,12 @@
 	</copyright>
 
 
+<changelog>
+  move 411 plugin to rocks-server where it belongs 2014/10/10 eh
+</changelog>
+
 <post>
 
-<file name="/opt/rocks/var/plugins/411/slurm_conf.py">
-
-import os
-import sys
-import stat
-import rocks.service411
-
-class Plugin(rocks.service411.Plugin):
-
-        def get_filename(self):
-                   return '/etc/slurm/slurm.conf'
-        def post(self):
-                os.system("scontrol reconfigure")
-
-
-</file>
 
 
 <file name="/etc/sysconfig/slurm">

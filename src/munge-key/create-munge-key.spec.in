@@ -1,0 +1,50 @@
+# Generates a random key for munged
+#
+# (C) 2007 Gennaro Oliva
+# You may freely distribute this file under the terms of the GNU General
+# Public License, version 2 or later.
+
+Summary: create-munge-key
+Name: @NAME@
+Version: @VERSION@
+Release: @RELEASE@
+License: @COPYRIGHT@
+Vendor: @VENDOR@
+Group: System Environment/Base
+Source: %{name}-%{version}.tar.gz
+Buildroot: @VAR@/tmp/%{name}-buildroot
+BuildArchitectures: noarch
+Prefix: /opt/rocks
+
+%description
+rocks commands: sync slurm, propagates slurm confiuguration files and instructs slurm to read the new files
+
+##
+## PREP
+##
+%prep
+%setup
+
+##
+## BUILD
+##
+%build
+
+##
+## INSTALL
+##
+%install
+make ROOT=$RPM_BUILD_ROOT install
+
+##
+## FILES
+##
+%files
+/
+
+##
+## CLEAN
+##
+%clean
+/bin/rm -rf $RPM_BUILD_ROOT
+

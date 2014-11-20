@@ -12,6 +12,3 @@ export SURL=http://forge.sdsc.edu/triton
 
 . $ROLLSROOT/etc/bootstrap-functions.sh
 
-compile munge
-install munge-libs
-install munge-devel

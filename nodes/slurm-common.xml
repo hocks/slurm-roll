@@ -25,13 +25,11 @@
 <package>slurm-plugins</package>
 <package>slurm-perlapi</package>
 <package>slurm-torque</package>
+<package>slurm-bank</package>
+<package>gwrapper</package>
+
 
 <post>
-
-/bin/mkdir /var/spool/slurmd
-/bin/mkdir /var/log/slurm
-/bin/mkdir /var/spool/slurm.checkpoint
-chmod 1777 /var/spool/slurm.checkpoint
 
 <file name="/etc/logrotate.d/slurm">
 /var/log/slurm/slurmctld.log {
@@ -58,25 +56,40 @@ chmod 1777 /var/spool/slurm.checkpoint
 
 </file>
 
-<file name="/etc/rc.d/rocksconfig.d/post-96-munge" perms="0700">
+
+sed --in-place /munge:x:499/d /etc/passwd
+ 
+
+<file name="/etc/rc.d/rocksconfig.d/post-95-munge" perms="0700">
 #!/bin/sh
 
-while [! -f /etc/munge/munge.key ] ; do
+while [ ! -e /etc/munge/munge.key ] ; do
   sleep 2
 done
 
 /bin/chown -R munge.munge /etc/munge
 /bin/chown -R munge.munge /var/log/munge
 /bin/chown -R munge.munge /var/run/munge
+/bin/chown -R munge.munge /var/lib/munge
 
+service munge start
 
-/bin/rm /etc/rc.d/rocksconfig.d/post-96-munge
+/bin/mkdir /var/spool/slurmd
+/bin/mkdir /var/log/slurm
+chown slurm /var/log/slurm
+/bin/mkdir /var/spool/slurm.checkpoint
+chmod 1777 /var/spool/slurm.checkpoint
+mkdir /var/spool/slurm.state
+chown slurm /var/spool/slurm.state
+
+service slurm start
+
+/bin/rm /etc/rc.d/rocksconfig.d/post-95-munge
 </file> 
 
 
 chkconfig munge on
 chkconfig slurm on
-service munge start
 
 </post>
 </kickstart>

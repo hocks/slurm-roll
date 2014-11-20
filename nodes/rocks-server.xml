@@ -122,7 +122,7 @@ NodeName=DEFAULT State=UNKNOWN
 PartitionName=DEFAULT DEFAULT=YES State=UP
 </file>
 
-ServiceNode=$(rocks list host |grep "Service Node" | awk -F":" 'NR==1{ print $1 }')
+ServiceNode=$(rocks list attr |grep "SLURM_Server " | awk -F":" '{ if ( $0 ~ /true/ ) print $1 }')
 if [[ $ServiceNode == "" ]] ; then
  ServiceNode=&Kickstart_PrivateHostname;
 fi
@@ -130,6 +130,7 @@ ServiceAddress=$(host $ServiceNode.local | awk '{ print $4 }')
 
 rocks add attr attr="SLURM_ClusterName" value="CLUSTER"
 rocks add attr attr="SLURM_Servername" value=$ServiceNode
+rocks add attr attr="SLURM_ServerAddress" value=$ServiceAddress
 
 <file name="/etc/slurm/servernode.conf" perms="0644">
 ClusterName=&SLURM_ClusterName;
