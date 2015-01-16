@@ -31,6 +31,7 @@ build::
 install:: 
 	mkdir -p $(ROOT)/$(PKGROOT)
 	install -ma+r $(NAME) $(ROOT)/$(PKGROOT)
+	chmod 755 $(ROOT)/$(PKGROOT)/$(NAME)
 
 clean::
 	rm -f $(SCRIPTS)
