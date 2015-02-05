@@ -20,7 +20,17 @@
 
 <post>
 
+<file name="/etc/pam.d/slurm">
+#%PAM-1.0
+auth        required      pam_localuser.so
+account     required      pam_unix.so
+session     required      pam_limits.so
+</file>
 
+
+<file name="/etc/pam.d/sshd" mode="append">
+account     required      pam_slurm.so
+</file>
 
 <file name="/etc/sysconfig/slurm">
 # Ensure the limits we want for large clusters apply to the slurm daemons

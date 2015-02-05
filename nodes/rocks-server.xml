@@ -82,6 +82,7 @@ JobCheckpointDir=/var/spool/slurm.checkpoint
 JobCompType=jobcomp/filetxt
 JobCompLoc=/var/log/slurm/job_completions
 ProctrackType=proctrack/linuxproc
+UsePAM=1
 # 
 # ACCOUNTING 
 AccountingStorageEnforce=safe
